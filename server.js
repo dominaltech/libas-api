@@ -3,8 +3,8 @@ const { MongoClient, ObjectId } = require('mongodb');
 const cors = require('cors');
 const app = express();
 app.use(cors({
-  origin: '*',                    // Allow all for development (safe for now)
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  origin: '*',
+  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type']
 }));
 app.use(cors());
