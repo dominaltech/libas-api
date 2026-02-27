@@ -2,7 +2,11 @@ const express = require('express');
 const { MongoClient, ObjectId } = require('mongodb');
 const cors = require('cors');
 const app = express();
-
+app.use(cors({
+  origin: '*',                    // Allow all for development (safe for now)
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type']
+}));
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
@@ -108,3 +112,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Libas API running on port ${PORT}`);
 });
+
