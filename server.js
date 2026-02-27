@@ -1,16 +1,16 @@
 const express = require('express');
 const { MongoClient, ObjectId } = require('mongodb');
 const cors = require('cors');
+
 const app = express();
+
 app.use(cors({
   origin: '*',
-  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type']
 }));
-app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// REPLACE WITH YOUR ACTUAL MongoDB CONNECTION STRING
 const MONGODB_URI = 'mongodb+srv://dominaltech_db_user:Lg0xFmCXBUWYnYbd@cluster0.vhpaw9n.mongodb.net/libasdb?appName=Cluster0';
 const client = new MongoClient(MONGODB_URI);
 
@@ -24,7 +24,7 @@ async function connectDB() {
   return db;
 }
 
-// 🔄 PRODUCTS API (Admin + User site)
+// PRODUCTS
 app.get('/api/products', async (req, res) => {
   try {
     const db = await connectDB();
@@ -37,29 +37,6 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
-// 🖼️ BANNERS API (Homepage slider)
-app.get('/api/banners', async (req, res) => {
-  try {
-    const db = await connectDB();
-    const banners = await db.collection('bannerimages').find({}).sort({ sortorder: 1 }).toArray();
-    res.json(banners);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// 🔐 THAAN CONFIG API (Password protection)
-app.get('/api/thaanconfig', async (req, res) => {
-  try {
-    const db = await connectDB();
-    const config = await db.collection('thaanconfig').findOne({});
-    res.json(config || {});
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// ✅ ADMIN CRUD (Add/Edit/Delete Products)
 app.post('/api/products', async (req, res) => {
   try {
     const db = await connectDB();
@@ -76,7 +53,7 @@ app.post('/api/products', async (req, res) => {
 app.put('/api/products/:id', async (req, res) => {
   try {
     const db = await connectDB();
-    const result = await db.collection('products').updateOne(
+    await db.collection('products').updateOne(
       { _id: new ObjectId(req.params.id) },
       { $set: { ...req.body, updated_at: new Date() } }
     );
@@ -96,7 +73,80 @@ app.delete('/api/products/:id', async (req, res) => {
   }
 });
 
-// 🔐 THAAN PASSWORD VERIFY
+// BANNERS
+app.get('/api/banners', async (req, res) => {
+  try {
+    const db = await connectDB();
+    const banners = await db.collection('bannerimages').find({}).sort({ sort_order: 1 }).toArray();
+    res.json(banners);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/banners', async (req, res) => {
+  try {
+    const db = await connectDB();
+    const docs = Array.isArray(req.body) ? req.body : [req.body];
+    const result = await db.collection('bannerimages').insertMany(docs);
+    res.json({ insertedIds: result.insertedIds });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/banners/:id', async (req, res) => {
+  try {
+    const db = await connectDB();
+    await db.collection('bannerimages').updateOne(
+      { _id: new ObjectId(req.params.id) },
+      { $set: req.body }
+    );
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/banners/:id', async (req, res) => {
+  try {
+    const db = await connectDB();
+    await db.collection('bannerimages').deleteOne({ _id: new ObjectId(req.params.id) });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// THAAN
+app.get('/api/thaanconfig', async (req, res) => {
+  try {
+    const db = await connectDB();
+    const config = await db.collection('thaanconfig').findOne({});
+    res.json(config || {});
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/thaanconfig', async (req, res) => {
+  try {
+    const db = await connectDB();
+    const config = await db.collection('thaanconfig').findOne({});
+    if (config) {
+      await db.collection('thaanconfig').updateOne(
+        { _id: config._id },
+        { $set: req.body }
+      );
+    } else {
+      await db.collection('thaanconfig').insertOne(req.body);
+    }
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/thaanverify', async (req, res) => {
   try {
     const { password } = req.body;
@@ -112,4 +162,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Libas API running on port ${PORT}`);
 });
-
